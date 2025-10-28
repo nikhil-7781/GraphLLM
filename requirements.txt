@@ -37,8 +37,8 @@ neo4j==5.14.1
 networkx==3.2.1
 
 # LLM & NLP
-spacy==3.7.2
-# Note: Using spaCy for relation extraction instead of Stanford OpenIE
+# spacy==3.7.2  # Not used - using Gemini for all NLP tasks
+# Note: Using Gemini for relation extraction instead of Stanford OpenIE or spaCy
 
 # Backend & API
 fastapi==0.108.0
