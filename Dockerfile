@@ -9,7 +9,10 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     DEBIAN_FRONTEND=noninteractive \
-    API_PORT=7860
+    API_PORT=7860 \
+    HF_HOME=/app/cache \
+    TRANSFORMERS_CACHE=/app/cache \
+    SENTENCE_TRANSFORMERS_HOME=/app/cache
 
 # Set working directory
 WORKDIR /app
