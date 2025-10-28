@@ -1,5 +1,5 @@
-# GraphLLM - PDF Knowledge Graph + RAG System
-# Production-ready Docker image
+# GraphLLM - Hugging Face Spaces Deployment
+# Optimized Docker image for HF Spaces
 
 FROM python:3.12-slim
 
@@ -8,19 +8,18 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    API_PORT=7860
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (minimal set for HF Spaces)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     tesseract-ocr \
     ghostscript \
-    libpq-dev \
-    git \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -37,12 +36,13 @@ COPY . .
 RUN mkdir -p data uploads logs cache data/faiss_index && \
     chmod -R 755 data uploads logs cache
 
-# Expose port
-EXPOSE 8000
+# Expose Hugging Face Spaces default port
+EXPOSE 7860
 
-# Health check (check if API is responding)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:7860/ || exit 1
 
-# Run the application using main.py (which includes uvicorn)
+# Run the application
+# HF Spaces expects the app to listen on 0.0.0.0:7860
 CMD ["python3", "main.py"]

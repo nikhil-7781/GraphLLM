@@ -19,7 +19,7 @@ ENV/
 .env.*
 !.env.example
 
-# Data (exclude from image - use volumes)
+# Data (exclude from image - will be created at runtime)
 data/
 uploads/
 *.pdf
@@ -27,11 +27,11 @@ uploads/
 *.faiss
 *.index
 
-# Logs (exclude from image - use volumes)
+# Logs (exclude from image)
 logs/
 *.log
 
-# Cache (exclude from image - use volumes)
+# Cache
 cache/
 .cache/
 __pycache__/
@@ -54,6 +54,7 @@ htmlcov/
 .pytest_cache/
 .tox/
 *.cover
+tests/
 
 # Database files
 *.db
@@ -65,23 +66,20 @@ htmlcov/
 .gitignore
 .gitattributes
 
-# Documentation (keep README for reference)
+# Documentation
 docs/
 *.md
 !README.md
 
-# Docker files (don't need in image)
-Dockerfile*
-docker-compose*.yml
-.dockerignore
-
-# Platform deployment configs (not needed in container)
+# Deployment configs (not needed in container)
 railway.toml
 nixpacks.toml
 Procfile
 modal_app.py
 fly.toml
 vercel.json
+heroku.yml
+docker-compose*.yml
 
 # CI/CD
 .github/
@@ -92,4 +90,3 @@ vercel.json
 *.bak
 *.tmp
 *.temp
-.DS_Store
