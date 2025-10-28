@@ -1,0 +1,9 @@
+# Heroku Docker deployment configuration
+# Uses Docker for better ML dependency management
+
+build:
+  docker:
+    web: Dockerfile
+
+run:
+  web: python main.py
