@@ -32,9 +32,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create data directories with proper permissions
+# Create data directories with proper permissions (777 for HF Spaces non-root user)
 RUN mkdir -p data uploads logs cache data/faiss_index && \
-    chmod -R 755 data uploads logs cache
+    chmod -R 777 data uploads logs cache
 
 # Expose Hugging Face Spaces default port
 EXPOSE 7860
