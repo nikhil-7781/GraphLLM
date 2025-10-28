@@ -2,7 +2,7 @@
 Configuration management for GraphLLM system
 """
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 from typing import Optional
 import os
 
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     mistral_model: str = "mistral-7b-instruct-v0.1"
 
     # LLM Parameters
-    llm_temperature: float = 0.3
+    llm_temperature: float = 0.0
     llm_max_tokens: int = 2048
     llm_timeout: int = 120
 
