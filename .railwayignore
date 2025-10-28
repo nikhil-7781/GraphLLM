@@ -1,0 +1,26 @@
+# Ignore local development files
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.env.local
+.DS_Store
+
+# Ignore local data (will be created on Railway)
+data/
+uploads/
+logs/
+cache/
+
+# Ignore development artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+*.log

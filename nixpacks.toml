@@ -1,0 +1,17 @@
+[phases.setup]
+nixPkgs = ["python310", "tesseract", "ghostscript", "gcc", "g++"]
+
+[phases.install]
+cmds = [
+    "pip install --upgrade pip",
+    "pip install -r requirements.txt",
+    "python -m spacy download en_core_web_sm"
+]
+
+[phases.build]
+cmds = [
+    "mkdir -p data uploads logs cache data/faiss_index"
+]
+
+[start]
+cmd = "python main.py"

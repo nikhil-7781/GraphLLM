@@ -1,0 +1,69 @@
+# PDF Processing
+PyMuPDF==1.23.8
+pdfplumber==0.10.3
+pytesseract==0.3.10
+Pillow==10.1.0
+camelot-py[cv]==0.11.0
+tabula-py==2.9.0
+
+# NLP & Embeddings
+sentence-transformers==2.2.2
+transformers==4.36.0
+torch==2.1.2
+keybert==0.8.4
+yake==0.4.8
+
+# Knowledge Graph Generation
+kg-gen>=0.1.0  # Knowledge graph generation library
+litellm>=1.0.0  # Universal LLM API wrapper for Gemini
+
+# Multi-Agent System with LangGraph
+langgraph>=0.0.20  # LangChain's stateful agent orchestration
+langchain>=0.1.0  # LangChain core
+langchain-core>=0.1.0  # LangChain core abstractions
+langchain-community>=0.0.10  # Community integrations
+
+# Scientific NLP (optional - will fall back to en_core_web_sm if not available)
+# scispacy==0.5.3
+# To install SciSpacy model (optional):
+# pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.3/en_core_sci_lg-0.5.3.tar.gz
+
+# Vector Store & Search
+faiss-cpu==1.7.4
+# faiss-gpu==1.7.4  # Use this for GPU support
+
+# Graph Database & Processing
+neo4j==5.14.1
+networkx==3.2.1
+
+# LLM & NLP
+spacy==3.7.2
+# Note: Using spaCy for relation extraction instead of Stanford OpenIE
+
+# Backend & API
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+python-multipart==0.0.6
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Database
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
+pymongo==4.6.1
+
+# Utilities
+python-dotenv==1.0.0
+loguru==0.7.2
+tenacity==8.2.3
+httpx==0.26.0
+aiofiles==23.2.1
+
+# Monitoring & DevOps
+prometheus-client==0.19.0
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.23.2
+pytest-cov==4.1.0
