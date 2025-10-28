@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     # LLM Settings - Gemini (Primary)
     gemini_api_key: str = Field(default="", env="GEMINI_API_KEY")
-    gemini_model: str = "gemini-2.0-flash-exp"
+    gemini_model: str = "gemini-2.5-flash"
 
     # LLM Settings - Mistral (Fallback)
     mistral_api_key: str = Field(default="", env="MISTRAL_API_KEY")
