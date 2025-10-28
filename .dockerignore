@@ -67,11 +67,21 @@ htmlcov/
 
 # Documentation (keep README for reference)
 docs/
+*.md
+!README.md
 
 # Docker files (don't need in image)
 Dockerfile*
 docker-compose*.yml
 .dockerignore
+
+# Platform deployment configs (not needed in container)
+railway.toml
+nixpacks.toml
+Procfile
+modal_app.py
+fly.toml
+vercel.json
 
 # CI/CD
 .github/
