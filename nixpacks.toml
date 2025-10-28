@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["python310", "tesseract", "ghostscript", "gcc", "g++"]
+nixPkgs = ["python310", "tesseract", "ghostscript", "gcc"]
 
 [phases.install]
 cmds = [
