@@ -2,7 +2,7 @@
 Gemini-based Knowledge Graph Extraction
 Simple LLM-powered extraction using Google Gemini (cheapest option)
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from loguru import logger
 from models import Chunk, CanonicalTriple, RelationType
 from config import settings
@@ -277,7 +277,7 @@ CRITICAL: Return ONLY the JSON. If no technical concepts found, return {{"nodes"
                     "role": "user",
                     "content": prompt
                 }],
-                temperature=0.0,  # DETERMINISTIC: temperature=0 for consistent extraction
+                temperature=0.0,  
                 max_tokens=settings.llm_max_tokens,
                 timeout=settings.llm_timeout
             )
@@ -285,10 +285,9 @@ CRITICAL: Return ONLY the JSON. If no technical concepts found, return {{"nodes"
             # Extract response text
             response_text = response.choices[0].message.content.strip()
             logger.info(f"  📥 Gemini response ({len(response_text)} chars):")
-            logger.info(f"  {response_text[:500]}")  # Show first 500 chars
+            logger.info(f"  {response_text[:500]}") 
 
-            # Parse JSON - NEW FORMAT: {"nodes": [...]}
-            # Remove markdown code blocks if present
+            
             if "```json" in response_text:
                 response_text = response_text.split("```json")[1].split("```")[0].strip()
             elif "```" in response_text:
@@ -296,7 +295,7 @@ CRITICAL: Return ONLY the JSON. If no technical concepts found, return {{"nodes"
 
             data = json.loads(response_text)
 
-            # Extract nodes list
+            
             if isinstance(data, dict) and "nodes" in data:
                 nodes = data["nodes"]
             elif isinstance(data, list):
@@ -346,37 +345,39 @@ CRITICAL: Return ONLY the JSON. If no technical concepts found, return {{"nodes"
                 logger.warning(f"  No valid technical concepts found. Returning empty list.")
                 return []
 
-            # HARD CAP: Keep only top 2 nodes per page
-            selected_nodes = valid_nodes[:2]  # Take first 2 (Gemini already prioritized them)
+            
+            selected_nodes = valid_nodes[:2]  #
             logger.info(f"  🎯 Selected {len(selected_nodes)} nodes (hard cap = 2): {selected_nodes}")
 
-            # Create relationships between selected nodes
+            
             page_triples = []
 
             if len(selected_nodes) == 1:
                 # Only one node - create self-referencing relationship or skip
                 logger.info(f"  ℹ️ Only 1 node on page {page_number}, cannot create relationships")
-                # We could skip or create a "mentioned_in" relationship to the page itself
-                # For now, skip - graph needs at least 2 nodes for an edge
+                
                 return []
 
             elif len(selected_nodes) == 2:
-                # Two nodes - create single undirected edge
+                # Use LLM to determine actual relationship between nodes
                 node1, node2 = selected_nodes[0], selected_nodes[1]
 
-                # Create single edge (undirected graph - no need for reverse)
-                triple = CanonicalTriple(
-                    subject_label=node1,
-                    object_label=node2,
-                    relation=RelationType.RELATED_TO,  # Generic relation for co-occurrence
-                    confidence=0.85,
-                    justification=f"Co-occurred on page {page_number}",
+                # Extract relationship using LLM with page context
+                logger.info(f"  🔍 Extracting relationship between: {node1} ↔ {node2}")
+                relationship_triple = await self._extract_relationship_with_gemini(
+                    text=text,
+                    node1=node1,
+                    node2=node2,
                     page_number=page_number
                 )
-                page_triples.append(triple)
 
-                logger.info(f"  ✅ Created undirected edge:")
-                logger.info(f"    → {node1} ←→ {node2}")
+                if relationship_triple:
+                    page_triples.append(relationship_triple)
+                    logger.info(f"  ✅ Created directed edge:")
+                    logger.info(f"    → {relationship_triple.subject_label} --[{relationship_triple.relation.value}]--> {relationship_triple.object_label}")
+                    logger.info(f"    Justification: {relationship_triple.justification}")
+                else:
+                    logger.warning(f"  ⚠️ Could not extract relationship for {node1} ↔ {node2}")
 
             logger.info(f"  ✅ Returning {len(page_triples)} triples for page {page_number}")
             return page_triples
@@ -392,9 +393,109 @@ CRITICAL: Return ONLY the JSON. If no technical concepts found, return {{"nodes"
             logger.error(f"  Full trace:", exc_info=True)
             return []
 
+    async def _extract_relationship_with_gemini(self, text: str, node1: str, node2: str, page_number: int) -> Optional[CanonicalTriple]:
+        """
+        Use Gemini to determine the actual relationship between two nodes based on page context
+
+        Args:
+            text: Full page text for context
+            node1: First node/concept
+            node2: Second node/concept
+            page_number: Page number
+
+        Returns:
+            CanonicalTriple with proper relationship, or None if extraction fails
+        """
+        # List all available relation types for the LLM
+        available_relations = [r.value for r in RelationType]
+
+        prompt = f"""You are an expert at extracting knowledge graph relationships from technical text.
+
+Given two concepts and the text they appear in, determine the most accurate relationship between them.
+
+**Concepts:**
+- Concept A: "{node1}"
+- Concept B: "{node2}"
+
+**Context (page {page_number}):**
+{text[:3000]}
+
+**Available Relationship Types:**
+{', '.join(available_relations)}
+
+**Instructions:**
+1. Analyze how these two concepts relate in the given context
+2. Choose the MOST SPECIFIC relationship type from the list above
+3. Determine the direction: which concept is the subject and which is the object
+4. Provide a brief justification from the text
+
+**Output Format (JSON):**
+{{
+  "subject": "<node1 or node2>",
+  "object": "<node1 or node2>",
+  "relation": "<one of the available relationship types>",
+  "confidence": <0.0-1.0>,
+  "justification": "<brief explanation from text>"
+}}
+
+**Rules:**
+- Use the exact concept names provided
+- Choose only ONE relation type from the available list
+- If no clear relationship exists, use "related_to"
+- Direction matters: subject performs/has the relation to the object
+"""
+
+        try:
+            # Call Gemini API
+            response_text = await self.litellm.acompletion(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are an expert at knowledge graph relationship extraction. Always output valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                api_key=self.api_key,
+                temperature=0.1,  # Low temperature for consistent relationship extraction
+                response_format={"type": "json_object"}
+            )
+
+            response_content = response_text.choices[0].message.content
+            data = json.loads(response_content)
+
+            # Validate response
+            subject = data.get("subject", "").strip()
+            obj = data.get("object", "").strip()
+            relation_str = data.get("relation", "related_to").lower().strip().replace(" ", "_")
+            confidence = float(data.get("confidence", 0.7))
+            justification = data.get("justification", f"Relationship extracted from page {page_number}")
+
+            # Map relation string to enum
+            try:
+                relation = RelationType(relation_str)
+            except ValueError:
+                logger.warning(f"  ⚠️ Invalid relation '{relation_str}', defaulting to RELATED_TO")
+                relation = RelationType.RELATED_TO
+
+            # Create triple
+            triple = CanonicalTriple(
+                subject_label=subject,
+                object_label=obj,
+                relation=relation,
+                confidence=confidence,
+                justification=justification,
+                page_number=page_number
+            )
+
+            return triple
+
+        except json.JSONDecodeError as e:
+            logger.error(f"  ❌ JSON parse error in relationship extraction: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"  ❌ Relationship extraction failed: {e}")
+            return None
+
     def _is_technical_concept(self, concept: str) -> bool:
         """
-        ULTRA-STRICT validation: Only specific, named, domain-specific technical terms
 
         Args:
             concept: Concept string to validate
